@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+    <title></title>
+	<meta http-equiv="x-ua-compatible" content="IE=11" >
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <!-- External libraries -->
+    <script src="./jquery.min.js"></script><!-- jquery.js -->
+
+    <!-- Autodesk Forge Viewer -->
+    <link href="./style.min.css" rel="stylesheet" />
+	<script src="./viewer3D.min.js"></script>
+
+    <!-- Our scripts -->
+    <style>
+		body {margin: 0;font-family: "Helvetica Neue Light", "Segoe UI Semilight", sans-serif;}
+		#viewer {width: 100%;height: 100%;margin: 0;}
+    </style>
+
+    <script>
+        var docs =
+            [{"path":"./data/primaryGraphics.f2d",
+			"name":"2D View",
+			
+			}]
+        ;
+
+		//去除统计分析;去除token设置;所有资源走服务器
+		Autodesk.Viewing.Private.initializeLogger = function(){}
+		Autodesk.Viewing.Private.initializeProtein = function(){return false;}
+		Autodesk.Viewing.Private.initializeAuth = function(onSuccessCallback, options){
+			onSuccessCallback("");
+		};
+		
+        var oViewer =null ;
+        $(document).ready (function () {
+            //var options ={ 'document': '', 'env': 'AutodeskProduction' } ;
+            var options ={ 'docid': docs [0].path,
+							env: 'Local'
+						} ;
+
+            //oViewer =new Autodesk.Viewing.Viewer3D ($("#viewer") [0], {}) ; // No toolbar
+            oViewer =new Autodesk.Viewing.Private.GuiViewer3D ($("#viewer") [0], {}) ; // With toolbar
+            Autodesk.Viewing.Initializer (options, function () {
+				avp.ENABLE_DEBUG = false;
+				oViewer.initialize () ;
+				oViewer.prefs.set("openPropertiesOnSelect", true);
+				oViewer.setReverseZoomDirection(true);
+				oViewer.navTools.setVisible(false);
+				if (options.docid.endsWith(".f2d")) {
+					oViewer.setSwapBlackAndWhite(true);
+					oViewer.modelTools.setVisible(false);
+					oViewer.settingsTools.setVisible(false);
+				} else {
+					oViewer.settingsTools.getControl("toolbar-layersTool").setVisible(false)
+					oViewer.settingsTools.getControl("toolbar-settingsTool").setVisible(false)
+					oViewer.settingsTools.getControl("toolbar-fullscreenTool").setVisible(false)
+				}
+
+                oViewer.addEventListener (Autodesk.Viewing.GEOMETRY_LOADED_EVENT, function (event) {
+                    //oViewer.removeEventListener (Autodesk.Viewing.GEOMETRY_LOADED_EVENT, arguments.callee) ;
+                    oViewer.fitToView (true) ;
+                    setTimeout (function () { oViewer.autocam.setHomeViewFrom (oViewer.navigation.getCamera ()) ; }, 1000) ;
+                }) ;
+				oViewer.loadModel (options.docid) ;
+			}) ;
+        }) ;
+    </script>
+</head>
+
+<body>
+<div id="viewer"></div>
+</body>
+</html>
